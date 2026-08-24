@@ -81,8 +81,10 @@ func (a *Analyzer) Evaluate(maximumNCG, minimumTemperature float64, now time.Tim
 	proof.Latest = a.samples[len(a.samples)-1]
 	proof.SampleCount = len(a.samples)
 	proof.AverageNCG = total / float64(len(a.samples))
+	// The instantaneous and trend checks must stay independent: a single sample
+	// over the limit is a dangerous event even when the rolling average passes,
+	// so the trend result must not overwrite the per-sample instant result.
 	proof.TrendValid = proof.AverageNCG <= maximumNCG
-	proof.InstantValid = proof.TrendValid
 	return proof
 }
 

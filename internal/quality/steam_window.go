@@ -15,7 +15,7 @@ func NewSteamWindow(maximumAge time.Duration) SteamWindow {
 }
 
 func (w SteamWindow) Valid(proof steam.QualityProof, now time.Time) bool {
-	if !proof.TrendValid || !proof.TemperatureValid || proof.Latest.ObservedAt.IsZero() {
+	if !proof.InstantValid || !proof.TrendValid || !proof.TemperatureValid || proof.Latest.ObservedAt.IsZero() {
 		return false
 	}
 	return now.Sub(proof.Latest.ObservedAt) <= w.maximumAge
