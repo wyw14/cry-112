@@ -27,6 +27,17 @@ func (p ColdspotProof) Valid() bool {
 	return p.Required > 0 && p.Ready == p.Required
 }
 
+// AllRequiredReady reports whether every coldspot probe the batch marked as
+// required is continuously holding at or above the exposure temperature for the
+// recipe hold. Unlike Valid, it is vacuously true when the batch requires no
+// coldspot probes, so exposure timing is gated only by steam quality in that
+// case. A coldpoint that has not yet reached temperature, or that drops below
+// it mid-exposure, causes this to return false until the recipe hold is
+// re-established.
+func (p ColdspotProof) AllRequiredReady() bool {
+	return p.Ready == p.Required
+}
+
 type ColdspotEvaluator struct {
 	history *HistoryRegistry
 }

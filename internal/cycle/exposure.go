@@ -107,8 +107,16 @@ func (c *Controller) ApplyExposure(cycleID uuid.UUID, steamTemperature, ncgPerce
 	steamProof := c.steam.Quality(cycle.Recipe.MaximumSteamNCGPercent, cycle.Recipe.ExposureTemperatureC, now)
 	steamValid, reason := c.quality.SteamValid(steamProof, now)
 	coldspot := c.temperature.Coldspot(cycle.Placements, cycle.Recipe.ExposureTemperatureC, cycle.Recipe.ColdspotHold, now)
+	coldspotReady := coldspot.AllRequiredReady()
 	advanced := time.Duration(0)
-	if steamValid {
+	// Effective exposure accumulates only once every coldspot probe the batch
+	// requires has reached and is continuously holding the exposure temperature
+	// for the recipe hold. A coldpoint that has not yet reached temperature, or
+	// that drops below it mid-exposure, causes the hold proof to lapse; timing
+	// resumes only after the hold is re-established. This prevents the chamber
+	// average reaching setpoint from starting the count while the dense pack
+	// center is still cold, and applies the recipe's hold rule on any drop.
+	if steamValid && coldspotReady {
 		cycle.EffectiveExposure += elapsed
 		advanced = elapsed
 		if cycle.EffectiveExposure >= cycle.Recipe.ExposureDuration {
@@ -123,6 +131,10 @@ func (c *Controller) ApplyExposure(cycleID uuid.UUID, steamTemperature, ncgPerce
 	}
 	if !steamValid {
 		incident := c.addIncidentLocked(cycleID, "steam-quality", reason, map[string]any{"peak_ncg": steamProof.PeakNCG, "average_ncg": steamProof.AverageNCG}, now)
+		_ = incident
+	}
+	if !coldspotReady {
+		incident := c.addIncidentLocked(cycleID, "coldspot-hold", "coldspot hold not established", map[string]any{"required": coldspot.Required, "ready": coldspot.Ready}, now)
 		_ = incident
 	}
 	result := ExposureResult{Cycle: cycle, Coldspot: coldspot, Steam: steamProof, SteamReason: reason, AdvancedBy: advanced}
