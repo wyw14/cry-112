@@ -38,9 +38,8 @@ func NewAllocator(capacity float64) (*Allocator, error) {
 }
 
 func (a *Allocator) Reserve(chamberID string, requested float64, priority int, now time.Time) (Reservation, AllocationSnapshot, error) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	time.Sleep(10 * time.Millisecond)
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if chamberID == "" || requested < 0 || priority < 0 {
 		return Reservation{}, AllocationSnapshot{}, fmt.Errorf("invalid drain reservation")
 	}
