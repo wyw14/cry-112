@@ -1,0 +1,6 @@
+.git
+.claude
+data
+evidence
+private-oracles
+*.log
