@@ -35,8 +35,8 @@ func (s *ReleaseService) Evaluate(doorID string, chamberState model.ChamberState
 		return ReleaseDecision{}, err
 	}
 	decision := ReleaseDecision{DoorID: doorID, Proof: proof, EvaluatedAt: now.UTC()}
-	if !proof.PressureSafe || !proof.TemperatureSafe || !proof.SourceFresh {
-		decision.Reason = "chamber, temperature or seal proof is incomplete"
+	if !proof.PressureSafe || !proof.SealReleased || !proof.TemperatureSafe || !proof.SourceFresh {
+		decision.Reason = "chamber, seal, temperature or freshness proof is incomplete"
 		return decision, nil
 	}
 	decision.Unlock = true

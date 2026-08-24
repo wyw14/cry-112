@@ -21,14 +21,15 @@ func (p SafetyProof) Valid() bool {
 }
 
 type SafetyEvaluator struct {
-	ambientPressureKPa float64
+	ambientPressureKPa  float64
 	pressureTolerance  float64
 	maximumTemperature float64
-	maximumAge         time.Duration
+	maximumSealPressure float64
+	maximumAge          time.Duration
 }
 
 func NewSafetyEvaluator(maximumTemperature float64) SafetyEvaluator {
-	return SafetyEvaluator{ambientPressureKPa: 101.3, pressureTolerance: 3, maximumTemperature: maximumTemperature, maximumAge: 5 * time.Second}
+	return SafetyEvaluator{ambientPressureKPa: 101.3, pressureTolerance: 3, maximumTemperature: maximumTemperature, maximumSealPressure: 0.5, maximumAge: 5 * time.Second}
 }
 
 func (e SafetyEvaluator) Evaluate(state model.ChamberState, sealPressureBar float64, now time.Time) (SafetyProof, error) {
@@ -46,7 +47,7 @@ func (e SafetyEvaluator) Evaluate(state model.ChamberState, sealPressureBar floa
 		ChamberID:       state.ID,
 		PressureSafe:    pressureDifference <= e.pressureTolerance,
 		TemperatureSafe: state.TemperatureC <= e.maximumTemperature,
-		SealReleased:    pressureDifference <= e.pressureTolerance,
+		SealReleased:    sealPressureBar <= e.maximumSealPressure,
 		ObservedAt:      now.UTC(),
 		SourceFresh:     now.Sub(state.UpdatedAt) <= e.maximumAge,
 	}
