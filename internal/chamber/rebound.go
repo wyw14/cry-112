@@ -46,6 +46,10 @@ func (e ReboundEvaluator) Evaluate(start, end PressurePoint, maximumRise float64
 		RateKPaSec:  rise / duration.Seconds(),
 		MaximumRise: maximumRise,
 	}
-	proof.Valid = proof.End.PressureKPa >= 0
+	// The rebound is only proven when the pressure rise observed during the
+	// isolation window stays within the recipe limit. A rise that exceeds
+	// MaximumRise indicates residual air or a chamber leak, which must fail
+	// air removal regardless of how deep the preceding vacuum reached.
+	proof.Valid = proof.RiseKPa <= proof.MaximumRise
 	return proof, nil
 }

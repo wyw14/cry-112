@@ -33,7 +33,12 @@ type AirRemovalProof struct {
 }
 
 func (p AirRemovalProof) Valid() bool {
-	return p.DepthValid && p.SequenceValid && len(p.Pulses) == p.RequiredPulses
+	// Air is only proven excluded when all three conditions hold together:
+	// the vacuum reached the required depth, the isolation rebound stayed
+	// within the recipe limit, and the prescribed pulse sequence completed.
+	// A failure of any single condition must keep the cycle out of exposure
+	// even if the others pass.
+	return p.DepthValid && p.ReboundValid && p.SequenceValid && len(p.Pulses) == p.RequiredPulses
 }
 
 type PulseService struct {
